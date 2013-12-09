@@ -1,0 +1,286 @@
+<?php
+
+/**
+ * @file
+ *
+ * This module provides key authnetication for services module
+ * @author dinesh.sarangapani
+ */
+
+/**
+ * Implements hook_schema()
+ */
+function services_keyauth_schema() {
+  $schema['services_keys'] = array(
+    'description' => 'Stores all Service keys.',
+    'fields' => array(
+      'kid' => array(
+        'description' => 'The service key id',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'service_key' => array(
+        'description' => 'The service key.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => ''
+      ),
+      'title' => array(
+        'description' => 'The title of the service key.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''
+      ),
+    ),
+    'primary key' => array('kid'),
+    'foreign keys' => array(
+      'serviced_key' => array(
+        'table' => 'services_key_domain',
+        'columns' => array('kid' => 'kid'),
+      ),
+    ),
+    'indexes' => array(
+      'service_key'        => array('service_key'),
+    ),
+  );
+
+
+
+  $schema['services_key_domain'] = array(
+    'description' => 'Stores all Service keys.',
+    'fields' => array(
+      'kid' => array(
+        'description' => 'The service key id',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'domain_id' => array(
+        'description' => 'The service key.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => ''
+      ),
+    ),
+    'foreign keys' => array(
+      'services_keys' => array(
+        'table' => 'services_keys',
+        'columns' => array('kid' => 'kid'),
+      ),
+    ),
+    'indexes' => array(
+      'kid'        => array('kid'),
+      'domain_id'        => array('domain_id'),
+    ),
+  );
+ 
+  $schema['services_timestamp_nonce'] = array(
+    'description' => 'Stores timestamp against nonce for repeat attacks.',
+    'fields' => array(
+      'timestamp' => array(
+        'description' => 'The timestamp used with the Nonce.',
+        'type'        => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'nonce' => array(
+        'description' => 'The random string used on the request.',
+        'type'        => 'varchar',
+        'length'      => 32,
+        'not null'    => TRUE,
+        'default'     => ''
+      ),
+      'domain' => array(
+        'description' => 'The domain that submitted the request.',
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => ''
+      ),
+    ),
+    'indexes' => array(
+      'timestamp' => array('timestamp'),
+        'nonce'  => array('nonce'),
+    ),
+  );
+  return $schema;
+}
+
+
+
+/**
+ * An update to add the domain field in 'service_keys' and
+ * one more table 'services_timestamp_nonce' to prevent the
+ * repeat attacks
+ *
+ */
+function services_keyauth_update_7301() {
+
+  $domain_field =  array(
+    'description' => 'The domain of the service key.',
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => TRUE,
+    'default' => ''
+  );
+  $schema['services_timestamp_nonce'] = array(
+    'description' => 'Stores timestamp against nonce for repeat attacks.',
+    'fields' => array(
+      'timestamp' => array(
+        'description' => 'The timestamp used with the Nonce.',
+        'type'        => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'nonce' => array(
+        'description' => 'The random string used on the request.',
+        'type'        => 'varchar',
+        'length'      => 32,
+        'not null'    => TRUE,
+        'default'     => ''
+      ),
+      'domain' => array(
+        'description' => 'The domain that submitted the request.',
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => ''
+      ),
+    ),
+    'indexes' => array(
+      'timestamp' => array('timestamp'),
+      'nonce'  => array('nonce'),
+    ),
+  );
+  db_add_field('services_keys', 'domain', $domain_field);
+  db_create_table('services_timestamp_nonce', $schema['services_timestamp_nonce']);
+}
+
+/**
+ * An update to make the services key and domain relation from 1:1 to 1:n mapping
+ *
+ */
+function services_keyauth_update_7302() {
+
+  if (!db_table_exists('services_keys_old')) {
+    db_rename_table('services_keys', 'services_keys_old');
+  }
+
+  $schema['services_keys'] = array(
+    'description' => 'Stores all Service keys.',
+    'fields' => array(
+      'kid' => array(
+        'description' => 'The service key id',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'service_key' => array(
+        'description' => 'The service key.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => ''
+      ),
+      'title' => array(
+        'description' => 'The title of the service key.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => ''
+      ),
+    ),
+    'primary key' => array('kid'),
+    'foreign keys' => array(
+      'serviced_key' => array(
+        'table' => 'services_key_domain',
+        'columns' => array('kid' => 'kid'),
+      ),
+    ),
+    'indexes' => array(
+      'service_key'        => array('service_key'),
+    ),
+  );
+
+
+
+  $schema['services_key_domain'] = array(
+    'description' => 'Stores all Service keys.',
+    'fields' => array(
+      'kid' => array(
+        'description' => 'The service key id',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'domain_id' => array(
+        'description' => 'The service key.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => ''
+      ),
+    ),
+    'foreign keys' => array(
+      'services_keys' => array(
+        'table' => 'services_keys',
+        'columns' => array('kid' => 'kid'),
+      ),
+    ),
+    'indexes' => array(
+      'kid'        => array('kid'),
+      'domain_id'        => array('domain_id'),
+    ),
+  );
+  db_create_table('services_keys', $schema['services_keys']);
+  db_create_table('services_key_domain', $schema['services_key_domain']);
+
+  $select = db_select('services_keys_old', 'asn');
+  $select->fields('asn', array('kid', 'title'));
+  $return_value = db_insert('services_keys')
+    ->fields(array('service_key', 'title'))
+    ->from($select)
+    ->execute();
+
+  // Identifying the old and generating the new based on the id
+  $services_key_domain_old = db_select('services_keys_old', 'sko')
+    ->fields('sko', array('kid', 'domain'))
+    ->execute()
+    ->fetchallKeyed();
+  $services_key_domain = db_select('services_keys', 'sko')
+    ->fields('sko', array('service_key', 'kid'))
+    ->execute()
+    ->fetchallKeyed();
+
+
+  $domain_vocab = taxonomy_vocabulary_machine_name_load('domains');
+
+  if (!is_object($domain_vocab)) {
+    watchdog('services_insall', 'domains vocabulry missing, Unable to create a domain');
+  }
+
+  foreach ($services_key_domain_old as $key => $domain) {
+    $term_exists = taxonomy_term_load_multiple(array(), array('name' => trim($domain), 'vid' => $domain_vocab->vid));
+    if (!empty($term_exists)) {
+      // if the term exits
+      $term_exists = array_pop($term_exists);
+    }
+    else {
+      $term       = new stdClass();
+      $term->name = $domain;
+      $term->vid  = $domain_vocab->vid;
+      taxonomy_term_save($term);
+      $term_exists = array_pop(taxonomy_term_load_multiple(array(), array('name' => trim($domain), 'vid' => $domain_vocab->vid)));
+    }
+    db_insert('services_key_domain')
+      ->fields(array(
+        'kid' => $services_key_domain[$key],
+        'domain_id' => $term_exists->tid,
+      ))
+      ->execute();
+  }
+}

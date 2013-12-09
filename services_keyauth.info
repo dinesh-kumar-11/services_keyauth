@@ -1,0 +1,14 @@
+name = Key authentication
+description = Key authentication for services module.
+package = Services - authentication
+core = 7.x
+dependencies[] = services
+files[] = services_keyauth.module
+files[] = services_keyauth.inc
+
+; Information added by drupal.org packaging script on 2011-08-08
+version = "7.x-4.0-dev"
+core = "7.x"
+project = "rpx"
+datestamp = "1320309523"
+

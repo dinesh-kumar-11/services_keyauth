@@ -1,0 +1,61 @@
+<?php
+
+
+/**
+ * Implementation of hook_services_authentication().
+ *
+ * Supplies information about a given authentication method to Services.
+ *
+ * @return
+ *   An associative array with information about the authentication method
+ *   and its callbacks. The possible keys are as follows (all keys are
+ *   optional unless noted).
+ *
+ *   - title (required): The display name for this authentication method.
+ *   - description (required): Longer text describing this authentciation
+ *     method.
+ *   - authenticate_call (required): The name of a function to be called
+ *     to perform the actual authentication. <details of params/return>
+ *   - security_settings: A callback function which returns an associative
+ *     array of Form API elements for a settings form.
+ *   - _services_oauth_security_settings_validate: The name of a standard form
+ *     validation callback for the form defined in 'security_settings'.
+ *   - _services_oauth_security_settings_submit: The name of a standard form
+ *     submit callback for the form defined in 'security_settings'.
+ *   - alter_methods: The name of a callback function which will alter a
+ *     services method signature in order to add required arguments.
+ *   - file: An include file which contains the authentication callbacks.
+ */
+function multikey_auth_services_authentication_info() {
+  return array(
+    'file'             => 'multikey_auth.inc',
+    'title'            => t('Multi Key Authentication'),
+    'description'      => t('An Multi Key authorization'),
+    'security_settings' => '_multikey_auth_security_settings',
+    'authenticate_call' => '_multikey_auth_authenticate_call',
+  );
+}
+
+
+/**
+ * Return key inforamtion for all API keys.
+ *
+ * @return
+ *   An associative array of objects with the key's title and domain,
+ *   keyed on the Key ID.
+ */
+function multikey_auth_get_keys() {
+  static $keys;
+  if (!$keys) {
+    $keys = array();
+    $result = db_select('services_keys', 'sks')
+    ->fields('sks')
+    ->execute()
+    ->fetchAll();
+    foreach ($result as $key) {
+      $keys[$key->service_key]['title'] = $key->title;
+      $keys[$key->service_key]['service_key'] = $key->service_key;
+    }
+  }
+  return $keys;
+}

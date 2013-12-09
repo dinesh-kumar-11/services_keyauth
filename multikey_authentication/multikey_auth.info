@@ -1,0 +1,17 @@
+name = Multi Key authentication
+description = Extended Key authentication for services module, which allows multiple key for one service created.
+package = Services - authentication
+core = 7.x
+dependencies[] = services
+dependencies[] = services_keyauth
+
+
+files[] = multikey_auth.module
+files[] = multikey_auth.inc
+
+; Information added by drupal.org packaging script on 2011-08-08
+version = "7.x-4.0-dev"
+core = "7.x"
+project = "rpx"
+datestamp = "1320309523"
+
